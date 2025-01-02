@@ -2,28 +2,29 @@
 --TE AMO MANU <3
 
 local ScreenGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame") 
+local MainFrame = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
 local MinimizeBtn = Instance.new("TextButton")
 local CloseBtn = Instance.new("TextButton")
 local PlayerList = Instance.new("ScrollingFrame")
 local UIListLayout = Instance.new("UIListLayout")
 local InfoFrame = Instance.new("Frame")
-
+local HttpService = game:GetService("HttpService")
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
 local RunService = game:GetService("RunService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local GroupService = game:GetService("GroupService")
+local BadgeService = game:GetService("BadgeService")
 local UserInputService = game:GetService("UserInputService")
 
--- Notification inicial
 StarterGui:SetCore("SendNotification", {
     Title = "Informações do Jogador",
     Text = "Feito por Fielzão",
-    Duration = 3
+    Duration = 10
 })
 
--- Setup da GUI
 ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
@@ -38,13 +39,20 @@ local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = MainFrame
 
+local UIGradient = Instance.new("UIGradient")
+UIGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 30)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 20))
+})
+UIGradient.Parent = MainFrame
+
 Title.Name = "Title"
 Title.Parent = MainFrame
 Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 5)
 Title.Size = UDim2.new(1, -80, 0, 30)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "Informações do Jogador"
+Title.Text = "Informações Detalhadas do Jogador"
 Title.TextColor3 = Color3.fromRGB(220, 220, 220)
 Title.TextSize = 18
 
@@ -58,6 +66,10 @@ MinimizeBtn.Font = Enum.Font.GothamBold
 MinimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 MinimizeBtn.TextSize = 20
 
+local UICorner_2 = Instance.new("UICorner")
+UICorner_2.CornerRadius = UDim.new(0, 5)
+UICorner_2.Parent = MinimizeBtn
+
 CloseBtn.Name = "CloseBtn"
 CloseBtn.Parent = MainFrame
 CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
@@ -68,6 +80,10 @@ CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.TextSize = 14
 
+local UICorner_3 = Instance.new("UICorner")
+UICorner_3.CornerRadius = UDim.new(0, 5)
+UICorner_3.Parent = CloseBtn
+
 PlayerList.Name = "PlayerList"
 PlayerList.Parent = MainFrame
 PlayerList.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -77,176 +93,275 @@ PlayerList.CanvasSize = UDim2.new(0, 0, 0, 0)
 PlayerList.ScrollBarThickness = 6
 PlayerList.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
+local UICorner_4 = Instance.new("UICorner")
+UICorner_4.CornerRadius = UDim.new(0, 8)
+UICorner_4.Parent = PlayerList
+
+UIListLayout.Parent = PlayerList
+UIListLayout.SortOrder = Enum.SortOrder.Name
+UIListLayout.Padding = UDim.new(0, 5)
+
 InfoFrame.Name = "InfoFrame"
 InfoFrame.Parent = MainFrame
 InfoFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 InfoFrame.Position = UDim2.new(0, 220, 0, 45)
 InfoFrame.Size = UDim2.new(1, -230, 1, -55)
 
-local function createCopyButton(text, parent, pos)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 20, 0, 20)
-    btn.Position = pos
-    btn.Parent = parent
-    btn.Text = "📋"
-    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    
-    btn.MouseButton1Click:Connect(function()
-        setclipboard(text)
-        StarterGui:SetCore("SendNotification", {
-            Title = "Copiado",
-            Text = "Informação copiada!",
-            Duration = 2
-        })
+local UICorner_5 = Instance.new("UICorner")
+UICorner_5.CornerRadius = UDim.new(0, 8)
+UICorner_5.Parent = InfoFrame
+
+local function getPlatform(player)
+    local success, platform = pcall(function()
+        return player.OsPlatform
     end)
+    
+    if success then
+        return platform
+    else
+        local character = player.Character
+        if character then
+            local humanoid = character:FindFirstChild("Humanoid")
+            if humanoid then
+                if humanoid.RigType == Enum.HumanoidRigType.R6 then
+                    return "Console/Mobile"
+                else
+                    return "PC"
+                end
+            end
+        end
+        return "Desconhecido"
+    end
 end
 
 local function createPlayerButton(player)
-    local button = Instance.new("TextButton")
-    button.Name = player.Name
-    button.Parent = PlayerList
-    button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    button.Size = UDim2.new(1, -10, 0, 40)
-    button.Text = player.DisplayName
-    button.Font = Enum.Font.GothamSemibold
-    button.TextColor3 = Color3.fromRGB(220, 220, 220)
-    button.TextSize = 14
-    
-    button.MouseButton1Click:Connect(function()
-        InfoFrame:ClearAllChildren()
-        
-        -- Info básica
-        local infoLabel = Instance.new("TextLabel")
-        infoLabel.Size = UDim2.new(1, -20, 0, 120)
-        infoLabel.Position = UDim2.new(0, 10, 0, 10)
-        infoLabel.BackgroundTransparency = 1
-        infoLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
-        infoLabel.TextXAlignment = Enum.TextXAlignment.Left
-        infoLabel.TextYAlignment = Enum.TextYAlignment.Top
-        infoLabel.Font = Enum.Font.Gotham
-        infoLabel.TextSize = 14
-        infoLabel.Parent = InfoFrame
-        
-        local info = string.format(
-            "Nome: %s\nDisplay Name: %s\nID: %s\nIdade da Conta: %d dias",
+    local PlayerButton = Instance.new("TextButton")
+    PlayerButton.Name = player.Name
+    PlayerButton.Parent = PlayerList
+    PlayerButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    PlayerButton.Size = UDim2.new(1, -10, 0, 40)
+    PlayerButton.Text = player.DisplayName
+    PlayerButton.Font = Enum.Font.GothamSemibold
+    PlayerButton.TextColor3 = Color3.fromRGB(220, 220, 220)
+    PlayerButton.TextSize = 14
+    PlayerButton.AutoButtonColor = false
+
+    local UICorner_6 = Instance.new("UICorner")
+    UICorner_6.CornerRadius = UDim.new(0, 6)
+    UICorner_6.Parent = PlayerButton
+
+    local playerInfo = {}
+    playerInfo.messages = {}
+
+    PlayerButton.MouseButton1Click:Connect(function()
+        -- Clear existing info
+        for _, child in pairs(InfoFrame:GetChildren()) do
+            if child:IsA("UICorner") then continue end
+            child:Destroy()
+        end
+
+        -- Create info sections
+        local DataSection = Instance.new("Frame")
+        DataSection.Name = "DataSection"
+        DataSection.Parent = InfoFrame
+        DataSection.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+        DataSection.Position = UDim2.new(0, 10, 0, 10)
+        DataSection.Size = UDim2.new(1, -20, 0, 100)
+
+        local UICorner_7 = Instance.new("UICorner")
+        UICorner_7.CornerRadius = UDim.new(0, 6)
+        UICorner_7.Parent = DataSection
+
+        local DataTitle = Instance.new("TextLabel")
+        DataTitle.Name = "DataTitle"
+        DataTitle.Parent = DataSection
+        DataTitle.BackgroundTransparency = 1
+        DataTitle.Position = UDim2.new(0, 10, 0, 5)
+        DataTitle.Size = UDim2.new(1, -20, 0, 20)
+        DataTitle.Font = Enum.Font.GothamBold
+        DataTitle.Text = "Dados do Jogador"
+        DataTitle.TextColor3 = Color3.fromRGB(220, 220, 220)
+        DataTitle.TextSize = 14
+        DataTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+        local DataInfo = Instance.new("TextLabel")
+        DataInfo.Name = "DataInfo"
+        DataInfo.Parent = DataSection
+        DataInfo.BackgroundTransparency = 1
+        DataInfo.Position = UDim2.new(0, 10, 0, 30)
+        DataInfo.Size = UDim2.new(1, -20, 0, 60)
+        DataInfo.Font = Enum.Font.Gotham
+        DataInfo.TextColor3 = Color3.fromRGB(200, 200, 200)
+        DataInfo.TextSize = 12
+        DataInfo.TextXAlignment = Enum.TextXAlignment.Left
+        DataInfo.TextYAlignment = Enum.TextYAlignment.Top
+
+        local accountAge = player.AccountAge
+        local platform = getPlatform(player)
+        DataInfo.Text = string.format(
+            "Nome: %s\nDisplay Name: %s\nID: %d\nIdade da Conta: %d dias\nPlataforma: %s",
             player.Name,
             player.DisplayName,
             player.UserId,
-            player.AccountAge
+            accountAge,
+            platform
         )
-        infoLabel.Text = info
-        
-        -- Botões de cópia
-        createCopyButton(player.Name, InfoFrame, UDim2.new(1, -40, 0, 10))
-        createCopyButton(player.DisplayName, InfoFrame, UDim2.new(1, -40, 0, 30))
-        createCopyButton(tostring(player.UserId), InfoFrame, UDim2.new(1, -40, 0, 50))
-        
-        -- Chat log
-        local chatFrame = Instance.new("ScrollingFrame")
-        chatFrame.Size = UDim2.new(1, -20, 1, -140)
-        chatFrame.Position = UDim2.new(0, 10, 0, 130)
-        chatFrame.BackgroundTransparency = 0.9
-        chatFrame.ScrollBarThickness = 6
-        chatFrame.Parent = InfoFrame
-        
-        local chatList = Instance.new("UIListLayout")
-        chatList.Parent = chatFrame
-        chatList.SortOrder = Enum.SortOrder.LayoutOrder
-        
-        player.Chatted:Connect(function(msg)
-            local msgLabel = Instance.new("TextLabel")
-            msgLabel.Size = UDim2.new(1, -10, 0, 20)
-            msgLabel.BackgroundTransparency = 1
-            msgLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
-            msgLabel.TextXAlignment = Enum.TextXAlignment.Left
-            msgLabel.Font = Enum.Font.Gotham
-            msgLabel.TextSize = 12
-            msgLabel.Text = string.format("[%s] %s", os.date("%H:%M:%S"), msg)
-            msgLabel.Parent = chatFrame
-            
-            chatFrame.CanvasSize = UDim2.new(0, 0, 0, chatList.AbsoluteContentSize.Y)
-            chatFrame.CanvasPosition = Vector2.new(0, chatFrame.AbsoluteCanvasSize.Y)
+
+        local PositionSection = Instance.new("Frame")
+        PositionSection.Name = "PositionSection"
+        PositionSection.Parent = InfoFrame
+        PositionSection.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+        PositionSection.Position = UDim2.new(0, 10, 0, 120)
+        PositionSection.Size = UDim2.new(1, -20, 0, 70)
+
+        local UICorner_8 = Instance.new("UICorner")
+        UICorner_8.CornerRadius = UDim.new(0, 6)
+        UICorner_8.Parent = PositionSection
+
+        local PositionTitle = Instance.new("TextLabel")
+        PositionTitle.Name = "PositionTitle"
+        PositionTitle.Parent = PositionSection
+        PositionTitle.BackgroundTransparency = 1
+        PositionTitle.Position = UDim2.new(0, 10, 0, 5)
+        PositionTitle.Size = UDim2.new(1, -20, 0, 20)
+        PositionTitle.Font = Enum.Font.GothamBold
+        PositionTitle.Text = "Posição"
+        PositionTitle.TextColor3 = Color3.fromRGB(220, 220, 220)
+        PositionTitle.TextSize = 14
+        PositionTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+        local PositionInfo = Instance.new("TextLabel")
+        PositionInfo.Name = "PositionInfo"
+        PositionInfo.Parent = PositionSection
+        PositionInfo.BackgroundTransparency = 1
+        PositionInfo.Position = UDim2.new(0, 10, 0, 30)
+        PositionInfo.Size = UDim2.new(1, -20, 0, 30)
+        PositionInfo.Font = Enum.Font.Gotham
+        PositionInfo.TextColor3 = Color3.fromRGB(200, 200, 200)
+        PositionInfo.TextSize = 12
+        PositionInfo.TextXAlignment = Enum.TextXAlignment.Left
+
+        local ChatSection = Instance.new("Frame")
+        ChatSection.Name = "ChatSection"
+        ChatSection.Parent = InfoFrame
+        ChatSection.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+        ChatSection.Position = UDim2.new(0, 10, 0, 200)
+        ChatSection.Size = UDim2.new(1, -20, 1, -210)
+
+        local UICorner_9 = Instance.new("UICorner")
+        UICorner_9.CornerRadius = UDim.new(0, 6)
+        UICorner_9.Parent = ChatSection
+
+        local ChatTitle = Instance.new("TextLabel")
+        ChatTitle.Name = "ChatTitle"
+        ChatTitle.Parent = ChatSection
+        ChatTitle.BackgroundTransparency = 1
+        ChatTitle.Position = UDim2.new(0, 10, 0, 5)
+        ChatTitle.Size = UDim2.new(1, -20, 0, 20)
+        ChatTitle.Font = Enum.Font.GothamBold
+        ChatTitle.Text = "Registro de Mensagens"
+        ChatTitle.TextColor3 = Color3.fromRGB(220, 220, 220)
+        ChatTitle.TextSize = 14
+        ChatTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+        local ChatLog = Instance.new("ScrollingFrame")
+        ChatLog.Name = "ChatLog"
+        ChatLog.Parent = ChatSection
+        ChatLog.BackgroundTransparency = 1
+        ChatLog.Position = UDim2.new(0, 10, 0, 30)
+        ChatLog.Size = UDim2.new(1, -20, 1, -40)
+        ChatLog.CanvasSize = UDim2.new(0, 0, 0, 0)
+        ChatLog.ScrollBarThickness = 6
+        ChatLog.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+        local ChatLayout = Instance.new("UIListLayout")
+        ChatLayout.Parent = ChatLog
+        ChatLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        ChatLayout.Padding = UDim.new(0, 5)
+
+        -- Update position
+        local function updatePosition()
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local pos = player.Character.HumanoidRootPart.Position
+                PositionInfo.Text = string.format("X: %.2f\nY: %.2f\nZ: %.2f", pos.X, pos.Y, pos.Z)
+            end
+        end
+
+        -- Update chat log
+        local function addMessage(message, timestamp)
+            local MessageLabel = Instance.new("TextLabel")
+            MessageLabel.BackgroundTransparency = 1
+            MessageLabel.Size = UDim2.new(1, 0, 0, 20)
+            MessageLabel.Font = Enum.Font.Gotham
+            MessageLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+            MessageLabel.TextSize = 12
+            MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
+            MessageLabel.Text = string.format("[%s] %s", timestamp, message)
+            MessageLabel.Parent = ChatLog
+            MessageLabel.LayoutOrder = #ChatLog:GetChildren()
+        end
+
+        -- Connect player chat
+        player.Chatted:Connect(function(message)
+            local timestamp = os.date("%H:%M:%S")
+            addMessage(message, timestamp)
+        end)
+
+        -- Start position updates
+        local positionConnection = RunService.Heartbeat:Connect(updatePosition)
+
+        -- Cleanup when selecting different player
+        PlayerButton.AncestryChanged:Connect(function()
+            if positionConnection then
+                positionConnection:Disconnect()
+            end
         end)
     end)
 end
 
-for _, player in ipairs(Players:GetPlayers()) do
+-- Handle existing players
+for _, player in pairs(Players:GetPlayers()) do
     createPlayerButton(player)
 end
 
+-- Handle players joining
 Players.PlayerAdded:Connect(createPlayerButton)
+
+-- Handle players leaving
 Players.PlayerRemoving:Connect(function(player)
-    local btn = PlayerList:FindFirstChild(player.Name)
-    if btn then btn:Destroy() end
+    local button = PlayerList:FindFirstChild(player.Name)
+    if button then
+        button:Destroy()
+    end
 end)
 
--- Dragging
-local dragging = false
-local dragStart = nil
-local startPos = nil
+-- Dragging functionality
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
 
 MainFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
         startPos = MainFrame.Position
-    end
-end)
-
-MainFrame.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStart
-        MainFrame.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
-        )
-    end
-end)
-
--- Minimizar
-local minimized = false
-MinimizeBtn.MouseButton1Click:Connect(function()
-    minimized = not minimized
-    
-    if minimized then
-        local tween = TweenService:Create(MainFrame, TweenInfo.new(0.3), {
-            Size = UDim2.new(0, 40, 0, 40),
-            BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        })
-        tween:Play()
         
-        for _, child in pairs(MainFrame:GetChildren()) do
-            if child ~= MinimizeBtn then
-                child.Visible = false
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
             end
-        end
-        MinimizeBtn.Text = "+"
-    else
-        local tween = TweenService:Create(MainFrame, TweenInfo.new(0.3), {
-            Size = UDim2.new(0, 600, 0, 400),
-            BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-        })
-        tween:Play()
-        
-        for _, child in pairs(MainFrame:GetChildren()) do
-            child.Visible = true
-        end
-        MinimizeBtn.Text = "-"
+        end)
     end
 end)
 
-CloseBtn.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
+MainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
         dragInput = input
     end
 end)
@@ -259,31 +374,15 @@ end)
 
 -- Minimize/Close functionality
 local minimized = false
-local originalSize = MainFrame.Size
-local originalPosition = MainFrame.Position
-
 MinimizeBtn.MouseButton1Click:Connect(function()
     minimized = not minimized
-    
-    if minimized then
-        -- Minimize to side of screen
-        local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-        local sizeTween = TweenService:Create(MainFrame, tweenInfo, {
-            Size = UDim2.new(0, 40, 0, 40),
-            Position = UDim2.new(1, -50, 0.5, -20)
-        })
-        sizeTween:Play()
-    else
-        -- Restore original size and position
-        local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-        local sizeTween = TweenService:Create(MainFrame, tweenInfo, {
-            Size = originalSize,
-            Position = originalPosition
-        })
-        sizeTween:Play()
-    end
+    local targetSize = minimized and UDim2.new(0, 600, 0, 40) or UDim2.new(0, 600, 0, 400)
+    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(MainFrame, tweenInfo, {Size = targetSize})
+    tween:Play()
 end)
 
 CloseBtn.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
+
