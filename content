@@ -1,47 +1,42 @@
 --FEITO POR FIELZAO
 --TE AMO MANU <3
 
-
-
 local ScreenGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
+local MainFrame = Instance.new("Frame") 
 local Title = Instance.new("TextLabel")
 local MinimizeBtn = Instance.new("TextButton")
 local CloseBtn = Instance.new("TextButton")
 local PlayerList = Instance.new("ScrollingFrame")
 local UIListLayout = Instance.new("UIListLayout")
 local InfoFrame = Instance.new("Frame")
-local HttpService = game:GetService("HttpService")
+
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
+-- Notification inicial
 StarterGui:SetCore("SendNotification", {
-    Title = "penis grandalhao",
-    Text = "feito por enrico ratao",
-    Duration = 10
+    Title = "Informações do Jogador",
+    Text = "Feito por Fielzão",
+    Duration = 3
 })
 
+-- Setup da GUI
 ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-MainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
-MainFrame.Size = UDim2.new(0, 400, 0, 300)
+MainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
+MainFrame.Size = UDim2.new(0, 600, 0, 400)
 MainFrame.ClipsDescendants = true
 
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = MainFrame
-
-local UIGradient = Instance.new("UIGradient")
-UIGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 30)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 20))
-})
-UIGradient.Parent = MainFrame
 
 Title.Name = "Title"
 Title.Parent = MainFrame
@@ -49,7 +44,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 5)
 Title.Size = UDim2.new(1, -80, 0, 30)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "Player Information"
+Title.Text = "Informações do Jogador"
 Title.TextColor3 = Color3.fromRGB(220, 220, 220)
 Title.TextSize = 18
 
@@ -59,206 +54,236 @@ MinimizeBtn.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
 MinimizeBtn.Position = UDim2.new(1, -70, 0, 10)
 MinimizeBtn.Size = UDim2.new(0, 20, 0, 20)
 MinimizeBtn.Text = "-"
-MinimizeBtn.TextColor3 = Color3.fromRGB(25, 25, 25)
+MinimizeBtn.Font = Enum.Font.GothamBold
+MinimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeBtn.TextSize = 20
 
 CloseBtn.Name = "CloseBtn"
 CloseBtn.Parent = MainFrame
-CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 180, 180)
-CloseBtn.Position = UDim2.new(1, -35, 0, 10)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CloseBtn.Position = UDim2.new(1, -40, 0, 10)
 CloseBtn.Size = UDim2.new(0, 20, 0, 20)
 CloseBtn.Text = "X"
-CloseBtn.TextColor3 = Color3.fromRGB(25, 25, 25)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 14
 
 PlayerList.Name = "PlayerList"
 PlayerList.Parent = MainFrame
-PlayerList.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-PlayerList.BackgroundTransparency = 0.5
+PlayerList.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 PlayerList.Position = UDim2.new(0, 10, 0, 45)
-PlayerList.Size = UDim2.new(0, 180, 1, -55)
-PlayerList.ScrollBarThickness = 4
-
-UIListLayout.Parent = PlayerList
-UIListLayout.Padding = UDim.new(0, 5)
+PlayerList.Size = UDim2.new(0, 200, 1, -55)
+PlayerList.CanvasSize = UDim2.new(0, 0, 0, 0)
+PlayerList.ScrollBarThickness = 6
+PlayerList.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
 InfoFrame.Name = "InfoFrame"
 InfoFrame.Parent = MainFrame
-InfoFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-InfoFrame.Position = UDim2.new(0, 200, 0, 45)
-InfoFrame.Size = UDim2.new(1, -210, 1, -55)
-InfoFrame.Visible = false
+InfoFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+InfoFrame.Position = UDim2.new(0, 220, 0, 45)
+InfoFrame.Size = UDim2.new(1, -230, 1, -55)
 
-local function createPlayerButton(player)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, -10, 0, 30)
-    button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    button.Text = player.Name
-    button.TextColor3 = Color3.fromRGB(220, 220, 220)
-    button.Font = Enum.Font.Gotham
-    button.TextSize = 14
-    button.Parent = PlayerList
+local function createCopyButton(text, parent, pos)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 20, 0, 20)
+    btn.Position = pos
+    btn.Parent = parent
+    btn.Text = "📋"
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     
-    local buttonCorner = Instance.new("UICorner")
-    buttonCorner.CornerRadius = UDim.new(0, 6)
-    buttonCorner.Parent = button
-    
-    button.MouseButton1Click:Connect(function()
-        for _, child in pairs(InfoFrame:GetChildren()) do
-            child:Destroy()
-        end
-        
-        InfoFrame.Visible = true
-        
-        local infoScroll = Instance.new("ScrollingFrame")
-        infoScroll.Size = UDim2.new(1, -10, 1, -10)
-        infoScroll.Position = UDim2.new(0, 5, 0, 5)
-        infoScroll.BackgroundTransparency = 1
-        infoScroll.ScrollBarThickness = 4
-        infoScroll.Parent = InfoFrame
-        
-        local infoLayout = Instance.new("UIListLayout")
-        infoLayout.Parent = infoScroll
-        infoLayout.Padding = UDim.new(0, 10)
-        
-        local function addInfo(title, value)
-            local container = Instance.new("Frame")
-            container.Size = UDim2.new(1, 0, 0, 50)
-            container.BackgroundTransparency = 1
-            container.Parent = infoScroll
-            
-            local titleLabel = Instance.new("TextLabel")
-            titleLabel.Size = UDim2.new(1, 0, 0, 20)
-            titleLabel.BackgroundTransparency = 1
-            titleLabel.Font = Enum.Font.GothamBold
-            titleLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-            titleLabel.TextSize = 14
-            titleLabel.Text = title
-            titleLabel.Parent = container
-            
-            local valueLabel = Instance.new("TextLabel")
-            valueLabel.Size = UDim2.new(1, 0, 0, 20)
-            valueLabel.Position = UDim2.new(0, 0, 0, 25)
-            valueLabel.BackgroundTransparency = 1
-            valueLabel.Font = Enum.Font.Gotham
-            valueLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-            valueLabel.TextSize = 12
-            valueLabel.Text = tostring(value)
-            valueLabel.Parent = container
-        end
-        
-        addInfo("Username", player.Name)
-        addInfo("Display Name", player.DisplayName)
-        addInfo("User ID", player.UserId)
-        addInfo("Account Age", player.AccountAge.." days")
-        addInfo("Device Type", player.TouchEnabled and "Mobile Device" or "PC/Desktop")
-        
-        if player.Character then
-            local humanoid = player.Character:FindFirstChild("Humanoid")
-            if humanoid then
-                addInfo("Health", math.floor(humanoid.Health))
-                addInfo("Max Health", humanoid.MaxHealth)
-                addInfo("Walk Speed", humanoid.WalkSpeed)
-                addInfo("Jump Power", humanoid.JumpPower)
-            end
-            
-            local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
-            if rootPart then
-                local pos = rootPart.Position
-                addInfo("Position", string.format("X: %.1f, Y: %.1f, Z: %.1f", pos.X, pos.Y, pos.Z))
-            end
-        end
-        
-        addInfo("Team", player.Team and player.Team.Name or "None")
-        if player.Team then
-            addInfo("Team Color", tostring(player.Team.TeamColor))
-        end
-        
-        addInfo("Chat Privacy Mode", player.ChatMode.Name)
-        addInfo("Following Enabled", tostring(player.FollowUserId ~= nil))
-        
-        local success, result = pcall(function()
-            return Players:GetPlayerByUserId(player.UserId)
-        end)
-        
-        if success and result then
-            addInfo("Membership Type", tostring(result.MembershipType))
-        end
-        
-        local char = player.Character
-        if char then
-            local accessories = {}
-            for _, item in pairs(char:GetChildren()) do
-                if item:IsA("Accessory") then
-                    table.insert(accessories, item.Name)
-                end
-            end
-            addInfo("Accessories Worn", #accessories > 0 and table.concat(accessories, ", ") or "None")
-        end
-        
-        addInfo("In Game Time", string.format("%.1f minutes", player.AccountAge * 1440))
-        
-        infoScroll.CanvasSize = UDim2.new(0, 0, 0, infoLayout.AbsoluteContentSize.Y + 20)
+    btn.MouseButton1Click:Connect(function()
+        setclipboard(text)
+        StarterGui:SetCore("SendNotification", {
+            Title = "Copiado",
+            Text = "Informação copiada!",
+            Duration = 2
+        })
     end)
 end
 
-for _, player in pairs(Players:GetPlayers()) do
+local function createPlayerButton(player)
+    local button = Instance.new("TextButton")
+    button.Name = player.Name
+    button.Parent = PlayerList
+    button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    button.Size = UDim2.new(1, -10, 0, 40)
+    button.Text = player.DisplayName
+    button.Font = Enum.Font.GothamSemibold
+    button.TextColor3 = Color3.fromRGB(220, 220, 220)
+    button.TextSize = 14
+    
+    button.MouseButton1Click:Connect(function()
+        InfoFrame:ClearAllChildren()
+        
+        -- Info básica
+        local infoLabel = Instance.new("TextLabel")
+        infoLabel.Size = UDim2.new(1, -20, 0, 120)
+        infoLabel.Position = UDim2.new(0, 10, 0, 10)
+        infoLabel.BackgroundTransparency = 1
+        infoLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+        infoLabel.TextXAlignment = Enum.TextXAlignment.Left
+        infoLabel.TextYAlignment = Enum.TextYAlignment.Top
+        infoLabel.Font = Enum.Font.Gotham
+        infoLabel.TextSize = 14
+        infoLabel.Parent = InfoFrame
+        
+        local info = string.format(
+            "Nome: %s\nDisplay Name: %s\nID: %s\nIdade da Conta: %d dias",
+            player.Name,
+            player.DisplayName,
+            player.UserId,
+            player.AccountAge
+        )
+        infoLabel.Text = info
+        
+        -- Botões de cópia
+        createCopyButton(player.Name, InfoFrame, UDim2.new(1, -40, 0, 10))
+        createCopyButton(player.DisplayName, InfoFrame, UDim2.new(1, -40, 0, 30))
+        createCopyButton(tostring(player.UserId), InfoFrame, UDim2.new(1, -40, 0, 50))
+        
+        -- Chat log
+        local chatFrame = Instance.new("ScrollingFrame")
+        chatFrame.Size = UDim2.new(1, -20, 1, -140)
+        chatFrame.Position = UDim2.new(0, 10, 0, 130)
+        chatFrame.BackgroundTransparency = 0.9
+        chatFrame.ScrollBarThickness = 6
+        chatFrame.Parent = InfoFrame
+        
+        local chatList = Instance.new("UIListLayout")
+        chatList.Parent = chatFrame
+        chatList.SortOrder = Enum.SortOrder.LayoutOrder
+        
+        player.Chatted:Connect(function(msg)
+            local msgLabel = Instance.new("TextLabel")
+            msgLabel.Size = UDim2.new(1, -10, 0, 20)
+            msgLabel.BackgroundTransparency = 1
+            msgLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+            msgLabel.TextXAlignment = Enum.TextXAlignment.Left
+            msgLabel.Font = Enum.Font.Gotham
+            msgLabel.TextSize = 12
+            msgLabel.Text = string.format("[%s] %s", os.date("%H:%M:%S"), msg)
+            msgLabel.Parent = chatFrame
+            
+            chatFrame.CanvasSize = UDim2.new(0, 0, 0, chatList.AbsoluteContentSize.Y)
+            chatFrame.CanvasPosition = Vector2.new(0, chatFrame.AbsoluteCanvasSize.Y)
+        end)
+    end)
+end
+
+for _, player in ipairs(Players:GetPlayers()) do
     createPlayerButton(player)
 end
 
 Players.PlayerAdded:Connect(createPlayerButton)
 Players.PlayerRemoving:Connect(function(player)
-    for _, button in pairs(PlayerList:GetChildren()) do
-        if button:IsA("TextButton") and button.Text == player.Name then
-            button:Destroy()
-            break
-        end
-    end
+    local btn = PlayerList:FindFirstChild(player.Name)
+    if btn then btn:Destroy() end
 end)
 
-local minimized = false
-MinimizeBtn.MouseButton1Click:Connect(function()
-    minimized = not minimized
-    local targetSize = minimized and UDim2.new(0, 400, 0, 40) or UDim2.new(0, 400, 0, 300)
-    local tween = TweenService:Create(MainFrame, TweenInfo.new(0.3), {Size = targetSize})
-    tween:Play()
-end)
-
-CloseBtn.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
-
-local dragging
-local dragInput
-local dragStart
-local startPos
-
-local function update(input)
-    local delta = input.Position - dragStart
-    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-        startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-end
+-- Dragging
+local dragging = false
+local dragStart = nil
+local startPos = nil
 
 MainFrame.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
         dragStart = input.Position
         startPos = MainFrame.Position
-        
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
     end
 end)
 
-MainFrame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
+MainFrame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- Minimizar
+local minimized = false
+MinimizeBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    
+    if minimized then
+        local tween = TweenService:Create(MainFrame, TweenInfo.new(0.3), {
+            Size = UDim2.new(0, 40, 0, 40),
+            BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        })
+        tween:Play()
+        
+        for _, child in pairs(MainFrame:GetChildren()) do
+            if child ~= MinimizeBtn then
+                child.Visible = false
+            end
+        end
+        MinimizeBtn.Text = "+"
+    else
+        local tween = TweenService:Create(MainFrame, TweenInfo.new(0.3), {
+            Size = UDim2.new(0, 600, 0, 400),
+            BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        })
+        tween:Play()
+        
+        for _, child in pairs(MainFrame:GetChildren()) do
+            child.Visible = true
+        end
+        MinimizeBtn.Text = "-"
+    end
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
         dragInput = input
     end
 end)
 
-game:GetService("UserInputService").InputChanged:Connect(function(input)
+UserInputService.InputChanged:Connect(function(input)
     if input == dragInput and dragging then
         update(input)
     end
+end)
+
+-- Minimize/Close functionality
+local minimized = false
+local originalSize = MainFrame.Size
+local originalPosition = MainFrame.Position
+
+MinimizeBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    
+    if minimized then
+        -- Minimize to side of screen
+        local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        local sizeTween = TweenService:Create(MainFrame, tweenInfo, {
+            Size = UDim2.new(0, 40, 0, 40),
+            Position = UDim2.new(1, -50, 0.5, -20)
+        })
+        sizeTween:Play()
+    else
+        -- Restore original size and position
+        local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        local sizeTween = TweenService:Create(MainFrame, tweenInfo, {
+            Size = originalSize,
+            Position = originalPosition
+        })
+        sizeTween:Play()
+    end
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
 end)
